@@ -1,0 +1,112 @@
+<title>Smiling Face — SVG Preview</title>
+<style>
+  :root {
+    --bg: #f6f5f2;
+    --panel: #ffffff;
+    --ink: #23211c;
+    --muted: #6f6b60;
+    --line: #e4e1d8;
+    --accent: #e6b800;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1815;
+      --panel: #242019;
+      --ink: #f2efe6;
+      --muted: #a49e8f;
+      --line: #35302700;
+      --line: #353027;
+      --accent: #ffd93b;
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #f6f5f2; --panel: #ffffff; --ink: #23211c;
+    --muted: #6f6b60; --line: #e4e1d8; --accent: #e6b800;
+  }
+  :root[data-theme="dark"] {
+    --bg: #1a1815; --panel: #242019; --ink: #f2efe6;
+    --muted: #a49e8f; --line: #353027; --accent: #ffd93b;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 12px 32px rgba(0,0,0,0.06);
+    max-width: 360px;
+  }
+  .eyebrow {
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+    margin: 0;
+  }
+  h1 {
+    font-size: 1.4rem;
+    margin: 0.1rem 0 0;
+    text-wrap: balance;
+    text-align: center;
+    font-weight: 650;
+  }
+  .stage {
+    background:
+      repeating-linear-gradient(45deg, transparent 0 11px, rgba(128,128,128,0.05) 11px 12px);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 1.25rem;
+    line-height: 0;
+  }
+  .stage svg { display: block; }
+  p.meta {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--muted);
+    text-align: center;
+    line-height: 1.5;
+  }
+  code {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 0.8em;
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    padding: 0.12em 0.4em;
+    border-radius: 5px;
+  }
+</style>
+
+<div class="card">
+  <div style="text-align:center">
+    <p class="eyebrow">SVG Preview</p>
+    <h1>Smiling Face</h1>
+  </div>
+
+  <div class="stage">
+    <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200" role="img" aria-label="A yellow smiling face">
+      <circle cx="100" cy="100" r="90" fill="#FFD93B" stroke="#E6B800" stroke-width="3"/>
+      <circle cx="70" cy="80" r="10" fill="#000000"/>
+      <circle cx="130" cy="80" r="10" fill="#000000"/>
+      <path d="M 60 120 Q 100 165 140 120" fill="none" stroke="#000000" stroke-width="8" stroke-linecap="round"/>
+    </svg>
+  </div>
+
+  <p class="meta">200 × 200 px · pure SVG markup<br>saved as <code>smiling_face.svg</code></p>
+</div>
