@@ -24,10 +24,31 @@ class LineItem {
   }
 
   factory LineItem.fromJson(Map<String, dynamic> json) {
+    final description = json['description'];
+    if (description is! String) {
+      throw FormatException(
+        "Line item 'description' must be a string, but got "
+        '${description.runtimeType}.',
+      );
+    }
     return LineItem(
-      description: json['description'] as String,
-      quantity: (json['quantity'] as num).toDouble(),
-      unitPrice: (json['unitPrice'] as num).toDouble(),
+      description: description,
+      quantity: _parseNumber(json['quantity'], 'quantity'),
+      unitPrice: _parseNumber(json['unitPrice'], 'unitPrice'),
+    );
+  }
+
+  // Validates that [value] is numeric and returns it as a double. Throws a
+  // FormatException naming the offending field and value when it is not,
+  // instead of letting an opaque cast error propagate to the caller.
+  static double _parseNumber(dynamic value, String field) {
+    if (value is num) {
+      return value.toDouble();
+    }
+    final shown = value is String ? '"$value"' : value;
+    throw FormatException(
+      "Line item '$field' must be a number, but got $shown "
+      '(${value.runtimeType}).',
     );
   }
 }
@@ -38,6 +59,26 @@ String lineItemsToJson(List<LineItem> items) {
 }
 
 List<LineItem> lineItemsFromJson(String jsonString) {
-  final List<dynamic> parsed = jsonDecode(jsonString);
-  return parsed.map((json) => LineItem.fromJson(json)).toList();
+  final dynamic decoded = jsonDecode(jsonString);
+  if (decoded is! List) {
+    throw FormatException(
+      'Expected a JSON list of line items, but got ${decoded.runtimeType}.',
+    );
+  }
+  final items = <LineItem>[];
+  for (var i = 0; i < decoded.length; i++) {
+    final element = decoded[i];
+    if (element is! Map<String, dynamic>) {
+      throw FormatException(
+        'Line item at index $i must be a JSON object, but got '
+        '${element.runtimeType}.',
+      );
+    }
+    try {
+      items.add(LineItem.fromJson(element));
+    } on FormatException catch (e) {
+      throw FormatException('Invalid line item at index $i: ${e.message}');
+    }
+  }
+  return items;
 }
