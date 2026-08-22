@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Top Streams — the 5 biggest songs of every year since 2010</title>
+<meta name="description" content="Pick a year from 2010 onward and see the five most-streamed songs of that year with artist artwork.">
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #0b0b10;
+    --bg-glow-a: #1b1440;
+    --bg-glow-b: #06232b;
+    --surface: rgba(255, 255, 255, 0.04);
+    --surface-hi: rgba(255, 255, 255, 0.08);
+    --border: rgba(255, 255, 255, 0.10);
+    --border-hi: rgba(255, 255, 255, 0.22);
+    --text: #f2f2f7;
+    --text-dim: #a0a0b0;
+    --accent: #7c5cff;
+    --accent-2: #12d6a1;
+    --radius: 16px;
+    --maxw: 1080px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    margin: 0;
+    padding: 0 20px 80px;
+    background:
+      radial-gradient(1000px 600px at 12% -8%, var(--bg-glow-a), transparent 60%),
+      radial-gradient(900px 500px at 92% 4%, var(--bg-glow-b), transparent 62%),
+      var(--bg);
+    color: var(--text);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+                 "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  .wrap { max-width: var(--maxw); margin: 0 auto; }
+
+  /* ---------- header ---------- */
+
+  header { padding: 72px 0 40px; text-align: center; }
+
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface);
+    font-size: 0.78rem;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  .eyebrow::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent-2);
+    box-shadow: 0 0 12px var(--accent-2);
+  }
+
+  h1 {
+    margin: 20px 0 0;
+    font-size: clamp(2.1rem, 6vw, 3.6rem);
+    line-height: 1.06;
+    letter-spacing: -0.03em;
+    font-weight: 700;
+  }
+
+  h1 .grad {
+    background: linear-gradient(94deg, var(--accent) 10%, var(--accent-2) 90%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .lede {
+    margin: 16px auto 0;
+    max-width: 54ch;
+    color: var(--text-dim);
+    font-size: clamp(0.98rem, 2.2vw, 1.1rem);
+  }
+
+  /* ---------- year picker ---------- */
+
+  .picker { margin: 40px 0 8px; }
+
+  .picker-label {
+    display: block;
+    margin-bottom: 12px;
+    font-size: 0.78rem;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    text-align: center;
+  }
+
+  .years {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .year-btn {
+    appearance: none;
+    padding: 9px 15px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--text-dim);
+    font: inherit;
+    font-size: 0.95rem;
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.15s;
+  }
+
+  .year-btn:hover {
+    background: var(--surface-hi);
+    border-color: var(--border-hi);
+    color: var(--text);
+  }
+
+  .year-btn[aria-selected="true"] {
+    background: linear-gradient(94deg, var(--accent), #9b7bff);
+    border-color: transparent;
+    color: #fff;
+    font-weight: 600;
+    transform: translateY(-1px);
+  }
+
+  .year-btn:focus-visible {
+    outline: 2px solid var(--accent-2);
+    outline-offset: 3px;
+  }
+
+  /* ---------- chart ---------- */
+
+  .chart-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    margin: 52px 0 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .chart-head h2 {
+    margin: 0;
+    font-size: clamp(1.3rem, 3.4vw, 1.7rem);
+    letter-spacing: -0.02em;
+  }
+
+  .chart-head p { margin: 0; color: var(--text-dim); font-size: 0.9rem; }
+
+  ol.songs { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+
+  .song {
+    display: grid;
+    grid-template-columns: 44px 84px 1fr auto;
+    align-items: center;
+    gap: 18px;
+    padding: 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    animation: rise 0.42s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+    transition: border-color 0.18s, background 0.18s;
+  }
+
+  .song:hover { border-color: var(--border-hi); background: var(--surface-hi); }
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .song { animation: none; }
+    .year-btn { transition: none; }
+  }
+
+  .rank {
+    font-size: 1.5rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+    color: var(--text-dim);
+  }
+
+  .song:first-child .rank {
+    background: linear-gradient(180deg, var(--accent-2), var(--accent));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* artwork */
+
+  .art {
+    position: relative;
+    width: 84px;
+    aspect-ratio: 1;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+    flex: none;
+  }
+
+  .art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .art svg { width: 100%; height: 100%; display: block; }
+
+  .meta { min-width: 0; }
+
+  .title {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    overflow-wrap: anywhere;
+  }
+
+  .artist { margin: 2px 0 0; color: var(--text-dim); font-size: 0.92rem; overflow-wrap: anywhere; }
+
+  .bar {
+    margin-top: 9px;
+    height: 4px;
+    max-width: 260px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.09);
+    overflow: hidden;
+  }
+
+  .bar span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  }
+
+  .streams { text-align: right; padding-right: 6px; }
+
+  .streams b {
+    display: block;
+    font-size: 1.15rem;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+
+  .streams small { color: var(--text-dim); font-size: 0.74rem; letter-spacing: 0.05em; text-transform: uppercase; }
+
+  @media (max-width: 620px) {
+    .song {
+      grid-template-columns: 32px 62px 1fr;
+      gap: 12px;
+      row-gap: 10px;
+    }
+    .art { width: 62px; }
+    .rank { font-size: 1.15rem; }
+    .streams { grid-column: 2 / -1; text-align: left; padding: 0; }
+    .streams b { font-size: 1rem; }
+    .bar { max-width: none; }
+  }
+
+  footer {
+    margin-top: 56px;
+    padding-top: 22px;
+    border-top: 1px solid var(--border);
+    color: var(--text-dim);
+    font-size: 0.84rem;
+  }
+
+  footer p { margin: 0 0 8px; max-width: 74ch; }
+
+  .noscript {
+    margin-top: 40px;
+    padding: 16px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <span class="eyebrow">2010 &ndash; 2025</span>
+    <h1>The five biggest songs of <span class="grad">every year</span></h1>
+    <p class="lede">
+      Pick a year and see the tracks that racked up the most streams, with cover
+      artwork for each artist.
+    </p>
+  </header>
+
+  <section class="picker" aria-label="Choose a year">
+    <span class="picker-label" id="picker-label">Select a year</span>
+    <div class="years" role="tablist" aria-labelledby="picker-label" id="years"></div>
+  </section>
+
+  <section aria-live="polite">
+    <div class="chart-head">
+      <h2 id="chart-title">Top 5</h2>
+      <p id="chart-sub"></p>
+    </div>
+    <ol class="songs" id="songs"></ol>
+  </section>
+
+  <noscript>
+    <div class="noscript">This page needs JavaScript to switch between years.</div>
+  </noscript>
+
+  <footer>
+    <p>
+      <strong>About the data.</strong> Stream counts are approximate cumulative
+      totals (in billions) for each track, rounded, and songs are grouped by
+      release year rather than by chart week. Figures are a hand-curated static
+      snapshot for demonstration &mdash; they are not live and will drift from
+      the platforms&rsquo; current numbers.
+    </p>
+    <p>
+      <strong>About the artwork.</strong> Cover art is generated from each
+      artist and title, so nothing copyrighted is bundled. Set the
+      <code>cover</code> field on any entry in <code>index.html</code> to swap in
+      a licensed image.
+    </p>
+  </footer>
+
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // Top 5 most-streamed songs per release year. `s` = approximate cumulative
+  // streams in billions. Add `cover: "url"` to any entry to use a real image
+  // instead of the generated artwork.
+  var CHARTS = {
+    2010: [
+      { title: "Just the Way You Are", artist: "Bruno Mars", s: 1.7 },
+      { title: "Love the Way You Lie", artist: "Eminem feat. Rihanna", s: 1.6 },
+      { title: "Firework", artist: "Katy Perry", s: 1.4 },
+      { title: "Hey, Soul Sister", artist: "Train", s: 1.2 },
+      { title: "Only Girl (In the World)", artist: "Rihanna", s: 1.1 }
+    ],
+    2011: [
+      { title: "Rolling in the Deep", artist: "Adele", s: 2.0 },
+      { title: "Someone Like You", artist: "Adele", s: 1.9 },
+      { title: "Pumped Up Kicks", artist: "Foster the People", s: 1.6 },
+      { title: "Moves Like Jagger", artist: "Maroon 5 feat. Christina Aguilera", s: 1.5 },
+      { title: "Party Rock Anthem", artist: "LMFAO", s: 1.4 }
+    ],
+    2012: [
+      { title: "Let Her Go", artist: "Passenger", s: 2.4 },
+      { title: "Radioactive", artist: "Imagine Dragons", s: 2.0 },
+      { title: "Somebody That I Used to Know", artist: "Gotye feat. Kimbra", s: 1.5 },
+      { title: "Thrift Shop", artist: "Macklemore & Ryan Lewis", s: 1.4 },
+      { title: "Little Talks", artist: "Of Monsters and Men", s: 1.3 }
+    ],
+    2013: [
+      { title: "Counting Stars", artist: "OneRepublic", s: 2.9 },
+      { title: "All of Me", artist: "John Legend", s: 2.6 },
+      { title: "Wake Me Up", artist: "Avicii", s: 2.3 },
+      { title: "Demons", artist: "Imagine Dragons", s: 2.1 },
+      { title: "Get Lucky", artist: "Daft Punk feat. Pharrell Williams", s: 1.5 }
+    ],
+    2014: [
+      { title: "Thinking Out Loud", artist: "Ed Sheeran", s: 2.6 },
+      { title: "Photograph", artist: "Ed Sheeran", s: 2.5 },
+      { title: "Take Me to Church", artist: "Hozier", s: 2.2 },
+      { title: "Uptown Funk", artist: "Mark Ronson feat. Bruno Mars", s: 2.1 },
+      { title: "Sugar", artist: "Maroon 5", s: 1.9 }
+    ],
+    2015: [
+      { title: "The Hills", artist: "The Weeknd", s: 2.6 },
+      { title: "Sorry", artist: "Justin Bieber", s: 2.4 },
+      { title: "Faded", artist: "Alan Walker", s: 2.3 },
+      { title: "Love Yourself", artist: "Justin Bieber", s: 2.1 },
+      { title: "Lean On", artist: "Major Lazer & DJ Snake feat. MØ", s: 2.0 }
+    ],
+    2016: [
+      { title: "Starboy", artist: "The Weeknd feat. Daft Punk", s: 3.2 },
+      { title: "Closer", artist: "The Chainsmokers feat. Halsey", s: 3.1 },
+      { title: "One Dance", artist: "Drake feat. Wizkid & Kyla", s: 3.0 },
+      { title: "Rockabye", artist: "Clean Bandit feat. Sean Paul & Anne-Marie", s: 1.9 },
+      { title: "Heathens", artist: "Twenty One Pilots", s: 1.7 }
+    ],
+    2017: [
+      { title: "Shape of You", artist: "Ed Sheeran", s: 4.3 },
+      { title: "rockstar", artist: "Post Malone feat. 21 Savage", s: 2.9 },
+      { title: "Perfect", artist: "Ed Sheeran", s: 2.9 },
+      { title: "Believer", artist: "Imagine Dragons", s: 2.9 },
+      { title: "Havana", artist: "Camila Cabello feat. Young Thug", s: 2.4 }
+    ],
+    2018: [
+      { title: "Sunflower", artist: "Post Malone & Swae Lee", s: 3.6 },
+      { title: "Someone You Loved", artist: "Lewis Capaldi", s: 3.2 },
+      { title: "Happier", artist: "Marshmello & Bastille", s: 2.4 },
+      { title: "SICKO MODE", artist: "Travis Scott", s: 2.3 },
+      { title: "Better Now", artist: "Post Malone", s: 2.2 }
+    ],
+    2019: [
+      { title: "Blinding Lights", artist: "The Weeknd", s: 4.9 },
+      { title: "Circles", artist: "Post Malone", s: 3.2 },
+      { title: "Dance Monkey", artist: "Tones and I", s: 3.1 },
+      { title: "bad guy", artist: "Billie Eilish", s: 2.6 },
+      { title: "Señorita", artist: "Shawn Mendes & Camila Cabello", s: 2.6 }
+    ],
+    2020: [
+      { title: "Heat Waves", artist: "Glass Animals", s: 3.5 },
+      { title: "Save Your Tears", artist: "The Weeknd", s: 2.9 },
+      { title: "Watermelon Sugar", artist: "Harry Styles", s: 2.5 },
+      { title: "Levitating", artist: "Dua Lipa", s: 2.4 },
+      { title: "Mood", artist: "24kGoldn feat. iann dior", s: 2.1 }
+    ],
+    2021: [
+      { title: "STAY", artist: "The Kid LAROI & Justin Bieber", s: 3.3 },
+      { title: "Bad Habits", artist: "Ed Sheeran", s: 2.3 },
+      { title: "drivers license", artist: "Olivia Rodrigo", s: 2.2 },
+      { title: "Cold Heart (PNAU Remix)", artist: "Elton John & Dua Lipa", s: 2.2 },
+      { title: "good 4 u", artist: "Olivia Rodrigo", s: 2.0 }
+    ],
+    2022: [
+      { title: "As It Was", artist: "Harry Styles", s: 4.0 },
+      { title: "Calm Down", artist: "Rema & Selena Gomez", s: 2.2 },
+      { title: "Bad Habit", artist: "Steve Lacy", s: 1.7 },
+      { title: "Unholy", artist: "Sam Smith & Kim Petras", s: 1.7 },
+      { title: "I'm Good (Blue)", artist: "David Guetta & Bebe Rexha", s: 1.6 }
+    ],
+    2023: [
+      { title: "Flowers", artist: "Miley Cyrus", s: 2.4 },
+      { title: "Kill Bill", artist: "SZA", s: 2.1 },
+      { title: "greedy", artist: "Tate McRae", s: 1.8 },
+      { title: "Seven", artist: "Jung Kook feat. Latto", s: 1.6 },
+      { title: "Dance the Night", artist: "Dua Lipa", s: 1.5 }
+    ],
+    2024: [
+      { title: "Die With A Smile", artist: "Lady Gaga & Bruno Mars", s: 2.6 },
+      { title: "BIRDS OF A FEATHER", artist: "Billie Eilish", s: 2.4 },
+      { title: "Beautiful Things", artist: "Benson Boone", s: 2.3 },
+      { title: "APT.", artist: "ROSÉ & Bruno Mars", s: 2.0 },
+      { title: "Espresso", artist: "Sabrina Carpenter", s: 1.9 }
+    ],
+    2025: [
+      { title: "Ordinary", artist: "Alex Warren", s: 1.6 },
+      { title: "Golden", artist: "HUNTR/X", s: 1.3 },
+      { title: "luther", artist: "Kendrick Lamar & SZA", s: 1.2 },
+      { title: "DtMF", artist: "Bad Bunny", s: 1.1 },
+      { title: "back to friends", artist: "sombr", s: 0.9 }
+    ]
+  };
+
+  var yearsEl = document.getElementById("years");
+  var songsEl = document.getElementById("songs");
+  var titleEl = document.getElementById("chart-title");
+  var subEl = document.getElementById("chart-sub");
+
+  var years = Object.keys(CHARTS).sort();
+
+  // Stable 32-bit hash so an artist always gets the same artwork.
+  function hash(str) {
+    var h = 2166136261;
+    for (var i = 0; i < str.length; i++) {
+      h ^= str.charCodeAt(i);
+      h = (h * 16777619) >>> 0;
+    }
+    return h;
+  }
+
+  function initials(name) {
+    var words = name.replace(/\(.*?\)/g, " ").split(/[\s&]+/).filter(Boolean);
+    var out = "";
+    for (var i = 0; i < words.length && out.length < 2; i++) {
+      var c = words[i].charAt(0);
+      if (/[a-z0-9]/i.test(c)) out += c.toUpperCase();
+    }
+    return out || "♪";
+  }
+
+  // Generated cover art: two-tone gradient, offset disc, artist monogram.
+  function artwork(song) {
+    if (song.cover) {
+      var img = document.createElement("img");
+      img.src = song.cover;
+      img.alt = "Cover art for " + song.title + " by " + song.artist;
+      img.loading = "lazy";
+      return img;
+    }
+
+    var h = hash(song.artist + "•" + song.title);
+    var hueA = h % 360;
+    var hueB = (hueA + 40 + ((h >>> 9) % 90)) % 360;
+    var angle = (h >>> 5) % 360;
+    var cx = 26 + ((h >>> 13) % 48);
+    var cy = 26 + ((h >>> 19) % 48);
+    var id = "g" + h.toString(36);
+
+    var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("viewBox", "0 0 100 100");
+    svg.setAttribute("role", "img");
+    svg.setAttribute("aria-label", "Generated artwork for " + song.title + " by " + song.artist);
+    svg.innerHTML =
+      '<defs>' +
+        '<linearGradient id="' + id + '" gradientTransform="rotate(' + angle + ' .5 .5)">' +
+          '<stop offset="0%" stop-color="hsl(' + hueA + ' 72% 56%)"/>' +
+          '<stop offset="100%" stop-color="hsl(' + hueB + ' 68% 34%)"/>' +
+        '</linearGradient>' +
+      '</defs>' +
+      '<rect width="100" height="100" fill="url(#' + id + ')"/>' +
+      '<g fill="none" stroke="#fff" stroke-opacity=".26">' +
+        '<circle cx="' + cx + '" cy="' + cy + '" r="34" stroke-width="1"/>' +
+        '<circle cx="' + cx + '" cy="' + cy + '" r="23" stroke-width="1"/>' +
+        '<circle cx="' + cx + '" cy="' + cy + '" r="12" stroke-width="1"/>' +
+      '</g>' +
+      '<circle cx="' + cx + '" cy="' + cy + '" r="4" fill="#fff" fill-opacity=".5"/>' +
+      '<text x="50" y="50" text-anchor="middle" dominant-baseline="central" ' +
+        'font-family="ui-sans-serif, system-ui, sans-serif" font-size="34" ' +
+        'font-weight="700" fill="#fff" fill-opacity=".92">' + initials(song.artist) + '</text>';
+    return svg;
+  }
+
+  function streamLabel(s) {
+    return s.toFixed(1) + "B";
+  }
+
+  function render(year) {
+    var list = CHARTS[year];
+    var top = list[0].s;
+
+    titleEl.textContent = "Top 5 of " + year;
+    subEl.textContent = "Ranked by approximate cumulative streams";
+    songsEl.textContent = "";
+
+    list.forEach(function (song, i) {
+      var li = document.createElement("li");
+      li.className = "song";
+      li.style.animationDelay = (i * 55) + "ms";
+
+      var rank = document.createElement("div");
+      rank.className = "rank";
+      rank.textContent = String(i + 1);
+
+      var art = document.createElement("div");
+      art.className = "art";
+      art.appendChild(artwork(song));
+
+      var meta = document.createElement("div");
+      meta.className = "meta";
+      var t = document.createElement("p");
+      t.className = "title";
+      t.textContent = song.title;
+      var a = document.createElement("p");
+      a.className = "artist";
+      a.textContent = song.artist;
+      var bar = document.createElement("div");
+      bar.className = "bar";
+      var fill = document.createElement("span");
+      fill.style.width = Math.round((song.s / top) * 100) + "%";
+      bar.appendChild(fill);
+      meta.appendChild(t);
+      meta.appendChild(a);
+      meta.appendChild(bar);
+
+      var streams = document.createElement("div");
+      streams.className = "streams";
+      var b = document.createElement("b");
+      b.textContent = streamLabel(song.s);
+      var small = document.createElement("small");
+      small.textContent = "streams";
+      streams.appendChild(b);
+      streams.appendChild(small);
+
+      li.appendChild(rank);
+      li.appendChild(art);
+      li.appendChild(meta);
+      li.appendChild(streams);
+      songsEl.appendChild(li);
+    });
+
+    Array.prototype.forEach.call(yearsEl.children, function (btn) {
+      var on = btn.dataset.year === String(year);
+      btn.setAttribute("aria-selected", on ? "true" : "false");
+      btn.tabIndex = on ? 0 : -1;
+    });
+  }
+
+  function select(year, focus) {
+    render(year);
+    if (focus) {
+      var btn = yearsEl.querySelector('[data-year="' + year + '"]');
+      if (btn) btn.focus();
+    }
+  }
+
+  years.forEach(function (year) {
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "year-btn";
+    btn.setAttribute("role", "tab");
+    btn.dataset.year = year;
+    btn.textContent = year;
+    btn.setAttribute("aria-selected", "false");
+    btn.tabIndex = -1;
+    btn.addEventListener("click", function () { select(year, false); });
+    yearsEl.appendChild(btn);
+  });
+
+  // Left/right arrows move between years, as a tablist should.
+  yearsEl.addEventListener("keydown", function (e) {
+    var step = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
+    if (!step) return;
+    e.preventDefault();
+    var i = years.indexOf(document.activeElement.dataset.year);
+    if (i < 0) return;
+    select(years[(i + step + years.length) % years.length], true);
+  });
+
+  select(years[years.length - 1], false);
+})();
+</script>
+</body>
+</html>
