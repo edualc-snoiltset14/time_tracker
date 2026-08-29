@@ -45,6 +45,34 @@ class _InvoiceEditScreenState extends State<InvoiceEditScreen> {
     } else {
       _invoiceIdController.text =
           'INV-${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}-001';
+      _generateNextInvoiceId();
+    }
+  }
+
+  // Finds the highest existing sequence number for this month's prefix so
+  // new invoices don't all collide on -001.
+  Future<void> _generateNextInvoiceId() async {
+    final db = Provider.of<AppDatabase>(context, listen: false);
+    final now = DateTime.now();
+    final prefix = 'INV-${now.year}-${now.month.toString().padLeft(2, '0')}-';
+
+    final existingInvoices = await db.select(db.invoices).get();
+    var maxSequence = 0;
+    for (final invoice in existingInvoices) {
+      if (invoice.invoiceIdString.startsWith(prefix)) {
+        final sequence =
+            int.tryParse(invoice.invoiceIdString.substring(prefix.length));
+        if (sequence != null && sequence > maxSequence) {
+          maxSequence = sequence;
+        }
+      }
+    }
+
+    final nextId = '$prefix${(maxSequence + 1).toString().padLeft(3, '0')}';
+    if (mounted) {
+      setState(() {
+        _invoiceIdController.text = nextId;
+      });
     }
   }
 
