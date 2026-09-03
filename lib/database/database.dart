@@ -95,6 +95,10 @@ class CompanySettings extends Table {
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
+  // Lets tests drive the schema against an in-memory database instead of the
+  // application support file.
+  AppDatabase.forTesting(super.e);
+
   @override
   int get schemaVersion => 3; // FIX: Incremented schema version to 3
 
