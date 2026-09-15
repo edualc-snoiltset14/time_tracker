@@ -1,7 +1,8 @@
-// Covers the sequential reference codes generated for new invoices:
-// the first invoice of a month, the next one in a month that already has
-// invoices, and a code that gets claimed by someone else while the new-invoice
-// screen sits open.
+// Covers the reference codes carried by invoices: the first invoice of a
+// month, the next one in a month that already has invoices, gaps left by
+// deleted invoices, a code claimed by someone else while the new-invoice
+// screen sits open, a code the user typed that is already in use, and editing
+// an existing invoice onto another invoice's code.
 import 'package:drift/drift.dart' as drift;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
@@ -30,8 +31,8 @@ void main() {
     return db.into(db.clients).insert(ClientsCompanion(name: drift.Value(name)));
   }
 
-  Future<void> insertInvoice(String reference, int clientId) async {
-    await db.into(db.invoices).insert(
+  Future<int> insertInvoice(String reference, int clientId) {
+    return db.into(db.invoices).insert(
           InvoicesCompanion(
             invoiceIdString: drift.Value(reference),
             clientId: drift.Value(clientId),
@@ -43,9 +44,13 @@ void main() {
         );
   }
 
+  Future<Invoice> loadInvoice(int id) {
+    return (db.select(db.invoices)..where((i) => i.id.equals(id))).getSingle();
+  }
+
   // Pushes the screen onto a route of its own so that saving, which pops, has
-  // somewhere to pop back to.
-  Future<void> openNewInvoiceScreen(WidgetTester tester) async {
+  // somewhere to pop back to. [invoice] null opens the new-invoice screen.
+  Future<void> openInvoiceScreen(WidgetTester tester, {Invoice? invoice}) async {
     await tester.pumpWidget(
       Provider<AppDatabase>.value(
         value: db,
@@ -54,7 +59,9 @@ void main() {
             builder: (context) => Scaffold(
               body: ElevatedButton(
                 onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const InvoiceEditScreen()),
+                  MaterialPageRoute(
+                    builder: (_) => InvoiceEditScreen(invoice: invoice),
+                  ),
                 ),
                 child: const Text('open'),
               ),
@@ -65,6 +72,19 @@ void main() {
     );
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
+  }
+
+  Future<void> openNewInvoiceScreen(WidgetTester tester) =>
+      openInvoiceScreen(tester);
+
+  Future<void> typeReference(WidgetTester tester, String reference) async {
+    await tester.enterText(find.byType(TextFormField), reference);
+    await tester.pumpAndSettle();
+  }
+
+  Future<void> tapSave(WidgetTester tester) async {
+    await tester.tap(find.byTooltip('Save Invoice'));
+    await tester.pumpAndSettle(const Duration(seconds: 1));
   }
 
   String shownReference(WidgetTester tester) {
@@ -122,13 +142,71 @@ void main() {
     // Someone else takes the displayed code before this screen is saved.
     await insertInvoice('${prefix}001', clientId);
 
-    await tester.tap(find.byTooltip('Save Invoice'));
-    await tester.pumpAndSettle(const Duration(seconds: 1));
+    await tapSave(tester);
 
     final references = (await db.select(db.invoices).get())
         .map((invoice) => invoice.invoiceIdString)
         .toList();
     expect(references, containsAll(<String>['${prefix}001', '${prefix}002']));
     expect(references.toSet().length, references.length);
+  });
+
+  testWidgets('a code the user typed themselves is reported, not renamed',
+      (tester) async {
+    final clientId = await insertClient('Acme');
+    final prefix = prefixForThisMonth();
+    await insertInvoice('${prefix}041', clientId);
+
+    await openNewInvoiceScreen(tester);
+    await selectClient(tester, 'Acme');
+    await typeReference(tester, '${prefix}041');
+
+    await tapSave(tester);
+
+    // Nothing saved, and the user is told why rather than having their code
+    // silently swapped for a generated one.
+    expect(await db.select(db.invoices).get(), hasLength(1));
+    expect(
+      find.text('Invoice ID ${prefix}041 is already in use.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('editing an invoice onto a code another invoice uses is refused',
+      (tester) async {
+    final clientId = await insertClient('Acme');
+    final prefix = prefixForThisMonth();
+    await insertInvoice('${prefix}001', clientId);
+    final secondId = await insertInvoice('${prefix}002', clientId);
+
+    await openInvoiceScreen(tester, invoice: await loadInvoice(secondId));
+    await typeReference(tester, '${prefix}001');
+
+    await tapSave(tester);
+
+    expect((await loadInvoice(secondId)).invoiceIdString, '${prefix}002');
+    expect(
+      find.text('Invoice ID ${prefix}001 is already in use.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('re-saving an invoice under its own code still works',
+      (tester) async {
+    final clientId = await insertClient('Acme');
+    final prefix = prefixForThisMonth();
+    final onlyId = await insertInvoice('${prefix}001', clientId);
+
+    await openInvoiceScreen(tester, invoice: await loadInvoice(onlyId));
+    await tapSave(tester);
+
+    // The invoice must not collide with itself.
+    expect(
+      find.text('Invoice ID ${prefix}001 is already in use.'),
+      findsNothing,
+    );
+    final invoices = await db.select(db.invoices).get();
+    expect(invoices, hasLength(1));
+    expect(invoices.single.invoiceIdString, '${prefix}001');
   });
 }
