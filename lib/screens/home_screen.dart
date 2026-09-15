@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:time_tracker/database/database.dart';
 import 'package:drift/drift.dart' as drift;
+import 'package:time_tracker/providers/app_navigation.dart';
 import 'package:time_tracker/screens/todos/todo_edit_screen.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -12,6 +13,7 @@ class HomeScreen extends StatelessWidget {
   // Method to start a timer from a task
   void _startTimerFromTodo(BuildContext context, Todo todo) async {
     final db = Provider.of<AppDatabase>(context, listen: false);
+    final navigation = Provider.of<AppNavigation>(context, listen: false);
 
     // Check if another timer is already running
     final activeTimers = await (db.select(db.timeEntries)..where((t) => t.endTime.isNull())).get();
@@ -41,9 +43,9 @@ class HomeScreen extends StatelessWidget {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Timer for "${todo.title}" has started!')),
     );
-    
-    // TODO: Consider navigating to the Time Tracker tab
-    // This requires a more complex state management setup to control the BottomNavigationBar index from here.
+
+    // Show the running timer straight away by switching to the Time Tracker tab.
+    navigation.goToTab(AppTab.timeTracker);
   }
   
   // Method to clear all completed tasks

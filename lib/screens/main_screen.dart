@@ -1,5 +1,8 @@
 // lib/screens/main_screen.dart
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import 'package:time_tracker/providers/app_navigation.dart';
 
 // Import all of your screen files so this file knows what they are.
 import 'package:time_tracker/screens/clients/clients_screen.dart';
@@ -11,29 +14,23 @@ import 'package:time_tracker/screens/reports/reports_screen.dart';
 import 'package:time_tracker/screens/settings/settings_screen.dart';
 import 'package:time_tracker/screens/time_tracker/time_tracker_screen.dart';
 
-class MainScreen extends StatefulWidget {
+class MainScreen extends StatelessWidget {
   const MainScreen({super.key});
 
-  @override
-  State<MainScreen> createState() => _MainScreenState();
-}
-
-class _MainScreenState extends State<MainScreen> {
-  int _selectedIndex = 0;
-
   // This list now correctly references the imported screen classes.
-  final List<Widget> _screens = <Widget>[
-    const HomeScreen(),
-    const TimeTrackerScreen(),
-    const ProjectsScreen(),
-    const ClientsScreen(),
-    const ExpensesScreen(),
-    const InvoicesScreen(),
-    const ReportsScreen(),
-    const SettingsScreen(),
+  // It is ordered to match AppTab, which the selected index comes from.
+  static const List<Widget> _screens = <Widget>[
+    HomeScreen(),
+    TimeTrackerScreen(),
+    ProjectsScreen(),
+    ClientsScreen(),
+    ExpensesScreen(),
+    InvoicesScreen(),
+    ReportsScreen(),
+    SettingsScreen(),
   ];
 
-  final List<String> _titles = const <String>[
+  static const List<String> _titles = <String>[
     'Tasks To-Do',
     'Time Tracker',
     'Projects',
@@ -44,20 +41,22 @@ class _MainScreenState extends State<MainScreen> {
     'Settings',
   ];
 
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
+    assert(_screens.length == AppTab.values.length);
+    assert(_titles.length == AppTab.values.length);
+
+    // The selected tab lives in AppNavigation so screens inside a tab can
+    // switch tabs too (see HomeScreen's "start timer" action).
+    final navigation = context.watch<AppNavigation>();
+    final selectedIndex = navigation.currentIndex;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(_titles[_selectedIndex]),
+        title: Text(_titles[selectedIndex]),
       ),
       body: Center(
-        child: _screens.elementAt(_selectedIndex),
+        child: _screens.elementAt(selectedIndex),
       ),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
@@ -94,10 +93,10 @@ class _MainScreenState extends State<MainScreen> {
             label: 'Settings',
           ),
         ],
-        currentIndex: _selectedIndex,
+        currentIndex: selectedIndex,
         selectedItemColor: Colors.tealAccent,
         unselectedItemColor: Colors.grey,
-        onTap: _onItemTapped,
+        onTap: navigation.goToIndex,
         type: BottomNavigationBarType.fixed,
         backgroundColor: const Color(0xFF1E1E1E),
       ),

@@ -2,13 +2,23 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:time_tracker/database/database.dart';
+import 'package:time_tracker/providers/app_navigation.dart';
 import 'package:time_tracker/screens/main_screen.dart'; // Import the main screen with the navigation bar
 
 void main() {
   runApp(
-    Provider<AppDatabase>(
-      create: (context) => AppDatabase(),
-      dispose: (context, db) => db.close(),
+    MultiProvider(
+      providers: [
+        Provider<AppDatabase>(
+          create: (context) => AppDatabase(),
+          dispose: (context, db) => db.close(),
+        ),
+        // Lets any screen switch tabs, e.g. jumping to the Time Tracker tab
+        // after starting a timer from the task list.
+        ChangeNotifierProvider<AppNavigation>(
+          create: (context) => AppNavigation(),
+        ),
+      ],
       child: const MyApp(),
     ),
   );
