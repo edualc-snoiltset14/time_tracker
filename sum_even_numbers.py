@@ -1,4 +1,11 @@
-def sum_even_numbers(numbers):
+"""Utilities for summing the even integers in an iterable."""
+
+from typing import Iterable
+
+__all__ = ["sum_even_numbers"]
+
+
+def sum_even_numbers(numbers: Iterable[int]) -> int:
     """Return the sum of only the even integers in a list.
 
     Args:
@@ -17,7 +24,7 @@ def sum_even_numbers(numbers):
     except TypeError:
         raise TypeError(
             f"Expected an iterable of integers, got {type(numbers).__name__}"
-        )
+        ) from None
 
     total = 0
     for index, value in enumerate(iterator):
