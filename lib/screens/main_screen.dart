@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 
 // Import all of your screen files so this file knows what they are.
+import 'package:time_tracker/screens/calculator/calculator_screen.dart';
 import 'package:time_tracker/screens/clients/clients_screen.dart';
 import 'package:time_tracker/screens/expenses/expenses_screen.dart';
 import 'package:time_tracker/screens/home_screen.dart';
@@ -55,6 +56,19 @@ class _MainScreenState extends State<MainScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_titles[_selectedIndex]),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.calculate),
+            tooltip: 'Calculator',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const CalculatorScreen(),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: Center(
         child: _screens.elementAt(_selectedIndex),
